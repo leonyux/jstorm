@@ -81,6 +81,7 @@ public class JStormServerUtils {
 		PathUtils.touch(pidPath);
 		LOG.info("Successfully touch pid  " + pidPath);
 
+		// kill existing nimbus process
 		for (String existPid : existPids) {
 			try {
 				JStormUtils.kill(Integer.valueOf(existPid));

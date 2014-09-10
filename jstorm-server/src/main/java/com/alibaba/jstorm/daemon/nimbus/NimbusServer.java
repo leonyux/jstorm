@@ -73,52 +73,74 @@ public class NimbusServer {
 
 	public static void main(String[] args) throws Exception {
 		// read configuration files
+		// conf/storm.yaml overrides defaults.yaml for nimbus
 		@SuppressWarnings("rawtypes")
 		Map config = Utils.readStormConfig();
 
+		// presently do nothing
 		JStormServerUtils.startTaobaoJvmMonitor();
 
 		NimbusServer instance = new NimbusServer();
 
+		// simple implemention for INimbus interface
 		INimbus iNimbus = new DefaultInimbus();
 
+		// start nimbus server
 		instance.launchServer(config, iNimbus);
 
 	}
 
 	private void createPid(Map conf) throws Exception {
+		// mkdir ${storm.local.dir}/nimbus/pids
 		String pidDir = StormConfig.masterPids(conf);
 
+		// create pid file and kill existing nimbus process
 		JStormServerUtils.createPid(pidDir);
 	}
 
+	// nimbus server lancher
 	@SuppressWarnings("rawtypes")
 	private void launchServer(final Map conf, INimbus inimbus) {
 		LOG.info("Begin to start nimbus with conf " + conf);
 
 		try {
 			// 1. check whether mode is distributed or not
+			// in defaults.yaml, there is a property:
+			// storm.cluster.mode: "distributed"
 			StormConfig.validate_distributed_mode(conf);
 
+			// create pid file and kill existing nimbus process
 			createPid(conf);
 
+			// add shutdown hook cleanup
 			initShutdownHook();
 
+			// DefaultInimbus do nothing
 			inimbus.prepare(conf, StormConfig.masterInimbus(conf));
 
+			// construct NimbusData object with TimeCachedMap uploader and downloader
 			data = createNimbusData(conf, inimbus);
 
+			// start daemon thread execute FollowerRunnable object
+			// TODO: what dose FollowerRunnable do?
 			initFollowerThread(conf);
 
+			// get port from config and start httpserver
+			// TODO: what dose HttpServer do?
 			int port = ConfigExtension.getNimbusDeamonHttpserverPort(conf);
 			hs = new Httpserver(port);
 			hs.start();
 
+			// determine whether nimbus run under a yarn container
+			// if so, create heartbeat thread
 			initContainerHBThread(conf);
 
+			// follower thread set data.isLeader
+			// if not leader wait here
 			while (!data.isLeader())
 				Utils.sleep(5000);
 
+			// if leader
 			init(conf);
 		} catch (Throwable e) {
 			LOG.error("Fail to run nimbus ", e);

@@ -178,39 +178,41 @@ public class Utils {
 		}
 		return ret;
 	}
-	
+
 	public static void replaceLocalDir(Map<Object, Object> conf) {
 		String stormHome = System.getProperty("jstorm.home");
 		boolean isEmpty = StringUtils.isBlank(stormHome);
-		
+
 		Map<Object, Object> replaceMap = new HashMap<Object, Object>();
-		
+
 		for (Entry entry : conf.entrySet()) {
 			Object key = entry.getKey();
 			Object value = entry.getValue();
-			
+
 			if (value instanceof String) {
-				if (StringUtils.isBlank((String)value) == true ) {
+				if (StringUtils.isBlank((String) value) == true) {
 					continue;
 				}
-				
-				String str = (String)value;
+
+				String str = (String) value;
 				if (isEmpty == true) {
-				    // replace %JSTORM_HOME% as current directory
-				    str = str.replace("%JSTORM_HOME%", ".");
-				}else {
-				    str = str.replace("%JSTORM_HOME%", stormHome);
+					// replace %JSTORM_HOME% as current directory
+					str = str.replace("%JSTORM_HOME%", ".");
+				} else {
+					str = str.replace("%JSTORM_HOME%", stormHome);
 				}
-				
-				
+
 				replaceMap.put(key, str);
 			}
 		}
-		
-		
+
 		conf.putAll(replaceMap);
 	}
 
+	// first reads defaults.yaml in classpath
+	// then overrides that config with user defined storm.yaml
+	// for nimbus it is $JSORM_DIR/conf/storm.yaml if env JSTORM_CONF_DIR not
+	// defined
 	public static Map readStormConfig() {
 		Map ret = readDefaultConfig();
 		String confFile = System.getProperty("storm.conf.file");
@@ -222,7 +224,7 @@ public class Utils {
 		}
 		ret.putAll(storm);
 		ret.putAll(readCommandLineOpts());
-		
+
 		replaceLocalDir(ret);
 		return ret;
 	}
@@ -359,24 +361,25 @@ public class Utils {
 					+ " to int");
 		}
 	}
-	
+
 	public static Integer getInt(Object o, Integer defaultValue) {
-	      if (null == o) {
-	        return defaultValue;
-	      }
-	      
-	      if(o instanceof Long) {
-	          return ((Long) o ).intValue();
-	      } else if (o instanceof Integer) {
-	          return (Integer) o;
-	      } else if (o instanceof Short) {
-	          return ((Short) o).intValue();
-	      } else if (o instanceof String) {
-	          return Integer.parseInt(((String) o));
-	      } else {
-	          throw new IllegalArgumentException("Don't know how to convert " + o + " to int");
-	      }
-	    }
+		if (null == o) {
+			return defaultValue;
+		}
+
+		if (o instanceof Long) {
+			return ((Long) o).intValue();
+		} else if (o instanceof Integer) {
+			return (Integer) o;
+		} else if (o instanceof Short) {
+			return ((Short) o).intValue();
+		} else if (o instanceof String) {
+			return Integer.parseInt(((String) o));
+		} else {
+			throw new IllegalArgumentException("Don't know how to convert " + o
+					+ " to int");
+		}
+	}
 
 	public static long secureRandomLong() {
 		return UUID.randomUUID().getLeastSignificantBits();
@@ -531,5 +534,5 @@ public class Utils {
 		String rtn = toks_to_path(tokenize_path(path));
 		return rtn;
 	}
-	
+
 }

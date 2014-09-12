@@ -119,6 +119,7 @@ public class NimbusServer {
 			inimbus.prepare(conf, StormConfig.masterInimbus(conf));
 
 			// construct NimbusData object with TimeCachedMap uploader and downloader
+			// data stucture that contains important
 			data = createNimbusData(conf, inimbus);
 
 			// start daemon thread execute FollowerRunnable object
@@ -141,6 +142,7 @@ public class NimbusServer {
 				Utils.sleep(5000);
 
 			// if leader
+			// make necessary init
 			init(conf);
 		} catch (Throwable e) {
 			LOG.error("Fail to run nimbus ", e);
@@ -175,6 +177,7 @@ public class NimbusServer {
 
 	private void init(Map conf) throws Exception {
 
+		// remove topologies in zk which doesn't have a local dir on Nimbus
 		NimbusUtils.cleanupCorruptTopologies(data);
 
 		initTopologyAssign();
@@ -235,6 +238,7 @@ public class NimbusServer {
 	}
 
 	private void initTopologyAssign() {
+		// create a TopologyAssign singleton
 		topologyAssign = TopologyAssign.getInstance();
 		topologyAssign.init(data);
 	}

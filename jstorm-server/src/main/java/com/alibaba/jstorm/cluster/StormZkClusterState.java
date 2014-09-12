@@ -42,6 +42,7 @@ public class StormZkClusterState implements StormClusterState {
 
 	private UUID state_id;
 
+	// TODO: what this solo mean?
 	private boolean solo;
 
 	public StormZkClusterState(Object cluster_state_spec) throws Exception {

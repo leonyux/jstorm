@@ -34,7 +34,7 @@ class NettyClientAsync extends NettyClient {
 
 	protected AtomicBoolean flush_later;
 	protected int flushCheckInterval;
-	protected final boolean isWithAcker;
+    protected final boolean blockSend;
 
 	boolean isDirectSend(Map conf) {
 
@@ -43,6 +43,14 @@ class NettyClientAsync extends NettyClient {
 		}
 
 		return !ConfigExtension.isNettyTransferAsyncBatch(conf);
+	}
+	
+	boolean isBlockSend(Map storm_conf) {
+		if (ConfigExtension.isTopologyContainAcker(storm_conf) == false) {
+			return false;
+		}
+		
+		return ConfigExtension.isNettyASyncBlock(storm_conf);
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -54,7 +62,7 @@ class NettyClientAsync extends NettyClient {
 		BATCH_THREASHOLD_WARN = ConfigExtension
 				.getNettyBufferThresholdSize(storm_conf);
 
-		isWithAcker = ConfigExtension.isTopologyContainAcker(storm_conf);
+		blockSend = isBlockSend(storm_conf);
 
 		directlySend = isDirectSend(storm_conf);
 
@@ -160,7 +168,23 @@ class NettyClientAsync extends NettyClient {
 					changeThreadhold = true;
 				}
 			}
+			
+			if (isClosed()) {
+				LOG.info("Channel has been closed " + name());
+				break;
+			}
 		}
+	}
+	
+	long getDelaySec(long cachedSize) {
+		long count = cachedSize / BATCH_THREASHOLD_WARN;
+		long sleepMs = (long)(Math.pow(2, count) * 10);
+		
+		if (sleepMs > 1000) {
+			sleepMs = 1000;
+		}
+		
+		return sleepMs;
 	}
 
 	void handleFailedChannel(MessageBatch messageBatch) {
@@ -170,11 +194,10 @@ class NettyClientAsync extends NettyClient {
 
 		long cachedSize = messageBatch.getEncoded_length();
 		if (cachedSize > BATCH_THREASHOLD_WARN) {
-			long count = (cachedSize + BATCH_THREASHOLD_WARN - 1)
-					/ BATCH_THREASHOLD_WARN;
-			long sleepMs = count * 10;
-
-			if (isWithAcker == false) {
+			
+			long sleepMs = getDelaySec(cachedSize);
+			
+			if (blockSend == false) {
 				LOG.warn(
 						"Target server  {} is unavailable, pending {}, bufferSize {}, block sending {}ms",
 						name, pendings.get(), cachedSize, sleepMs);
@@ -294,7 +317,7 @@ class NettyClientAsync extends NettyClient {
 			return null;
 		}
 
-		if (isWithAcker == true && pendings.get() >= MAX_SEND_PENDING) {
+		if (blockSend == true && pendings.get() >= MAX_SEND_PENDING) {
 			return null;
 		}
 		return channel;

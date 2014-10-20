@@ -193,8 +193,10 @@ public class LogPage implements Serializable {
 
 			host = componentTask.getHost();
 
-			logFileName = componentTask.getTopologyid() + "-worker-"
-					+ componentTask.getPort() + ".log";
+//			logFileName = componentTask.getTopologyid() + "-worker-"
+//					+ componentTask.getPort() + ".log";
+			logFileName = JStormUtils.genLogName(summ.get_name(), 
+					Integer.valueOf(componentTask.getPort()));
 
 		} catch (TException e) {
 			LOG.error(e.getCause(), e);
@@ -240,7 +242,6 @@ public class LogPage implements Serializable {
 					/ HttpserverUtils.HTTPSERVER_LOGVIEW_PAGESIZE;
 		}
 
-		List<Long> ret = new ArrayList<Long>();
 		if (item - current <= 5) {
 			for (long i = item - 1; i > current; i--) {
 				insertPage(i);

@@ -12,7 +12,7 @@ storm.zookeeper.port: 2181
 storm.zookeeper.root: "/jstorm"
 storm.zookeeper.session.timeout: 20000
 storm.zookeeper.connection.timeout: 15000
-storm.zookeeper.retry.times: 30
+storm.zookeeper.retry.times: 20
 storm.zookeeper.retry.interval: 1000
 storm.zookeeper.retry.intervalceiling.millis: 30000
 storm.cluster.mode: "distributed" # can be distributed or local
@@ -94,12 +94,17 @@ worker.gc.childopts: " -XX:SurvivorRatio=4 -XX:MaxTenuringThreshold=20 -XX:+UseC
 worker.heartbeat.frequency.secs: 2
 worker.classpath: ""
 worker.redirect.output: true
+# if worker.redirect.output.file is null, then it will be $LOG.out
+# please use absolute path
+worker.redirect.output.file: null
 # when supervisor is shutdown, automatically shutdown worker
 worker.stop.without.supervisor: false
 worker.memory.size: 2147483648
 
 task.heartbeat.frequency.secs: 10
 task.refresh.poll.secs: 10
+# how long task do cleanup 
+task.cleanup.timeout.sec: 10
 
 zmq.threads: 1
 zmq.linger.millis: 5000
@@ -124,7 +129,11 @@ storm.messaging.netty.flush.check.interval.ms: 10
 # it will slow down the netty sending speed
 storm.messaging.netty.buffer.threshold: 8388608
 storm.messaging.netty.max.pending: 16
+## send message with sync or async mode
 storm.messaging.netty.sync.mode: false
+## when netty is in sync mode and client channel is unavailable, 
+## it will block sending until channel is ready
+storm.messaging.netty.async.block: true
 
 ### topology.* configs are for specific executing storms
 topology.enable.message.timeouts: true
@@ -157,7 +166,8 @@ topology.max.error.report.per.interval: 5
 topology.kryo.factory: "backtype.storm.serialization.DefaultKryoFactory"
 topology.tuple.serializer: "backtype.storm.serialization.types.ListDelegateSerializer"
 topology.trident.batch.emit.interval.millis: 500
-topology.performance.metrics: false
+topology.performance.metrics: true
+topology.alimonitor.metrics.post: false
 
 
 # enable topology use user-define classloader to avoid class conflict

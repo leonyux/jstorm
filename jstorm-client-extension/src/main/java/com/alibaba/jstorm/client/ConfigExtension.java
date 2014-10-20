@@ -6,10 +6,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
-import org.json.simple.JSONValue;
 
 import backtype.storm.Config;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.jstorm.utils.JStormUtils;
 
 public class ConfigExtension {
@@ -72,6 +72,16 @@ public class ConfigExtension {
 		if (result == null)
 			return true;
 		return (Boolean) result;
+	}
+	
+	protected static final String WOREKER_REDIRECT_OUTPUT_FILE = "worker.redirect.output.file";
+	
+	public static void setWorkerRedirectOutputFile(Map conf, String outputPath) {
+		conf.put(WOREKER_REDIRECT_OUTPUT_FILE, outputPath);
+	}
+	
+	public static String getWorkerRedirectOutputFile(Map conf) {
+		return (String)conf.get(WOREKER_REDIRECT_OUTPUT_FILE);
 	}
 
 	/**
@@ -299,7 +309,7 @@ public class ConfigExtension {
 			List<WorkerAssignment> userDefines) {
 		List<String> ret = new ArrayList<String>();
 		for (WorkerAssignment worker : userDefines) {
-			ret.add(JSONValue.toJSONString(worker));
+			ret.add(JSON.toJSONString(worker));
 		}
 		conf.put(USE_USERDEFINE_ASSIGNMENT, ret);
 	}
@@ -310,6 +320,15 @@ public class ConfigExtension {
 		conf.put(MEMSIZE_PER_WORKER, memSize);
 	}
 
+    public static void setMemSizePerWorkerByMB(Map conf, long memSize) {
+        long size = memSize * 1024l;
+        setMemSizePerWorker(conf, size);
+    }
+
+    public static void setMemSizePerWorkerByGB(Map conf, long memSize) {
+        long size = memSize * 1024l;
+        setMemSizePerWorkerByMB(conf, size);
+    }
 	protected static final String CPU_SLOT_PER_WORKER = "worker.cpu.slot.num";
 
 	public static void setCpuSlotNumPerWorker(Map conf, int slotNum) {
@@ -375,5 +394,77 @@ public class ConfigExtension {
     
     public static void setNettySyncMode(Map conf, boolean sync) {
     	conf.put(NETTY_SYNC_MODE, sync);
+    }
+    
+    protected static String NETTY_ASYNC_BLOCK = "storm.messaging.netty.async.block";
+    public static boolean isNettyASyncBlock(Map conf) {
+    	return JStormUtils.parseBoolean(conf.get(NETTY_ASYNC_BLOCK), true);
+    }
+    
+    public static void setNettyASyncBlock(Map conf, boolean block) {
+    	conf.put(NETTY_ASYNC_BLOCK, block);
+    }
+    
+    protected static String ALIMONITOR_METRICS_POST = "topology.alimonitor.metrics.post";
+    
+    public static boolean isAlimonitorMetricsPost(Map conf) {
+    	return JStormUtils.parseBoolean(conf.get(ALIMONITOR_METRICS_POST), true);
+    }
+    
+    public static void setAlimonitorMetricsPost(Map conf, boolean post) {
+    	conf.put(ALIMONITOR_METRICS_POST, post);
+    }
+	
+	protected static String TASK_CLEANUP_TIMEOUT_SEC = "task.cleanup.timeout.sec";
+    
+    public static int getTaskCleanupTimeoutSec(Map conf) {
+    	return JStormUtils.parseInt(conf.get(TASK_CLEANUP_TIMEOUT_SEC), 10);
+    }
+    
+    public static void setTaskCleanupTimeoutSec(Map conf, int timeout) {
+    	conf.put(TASK_CLEANUP_TIMEOUT_SEC, timeout);
+    }
+    
+    protected static String UI_CLUSTERS = "ui.clusters";
+    protected static String UI_CLUSTER_NAME = "name";
+    protected static String UI_CLUSTER_ZK_ROOT = "zkRoot";
+    protected static String UI_CLUSTER_ZK_SERVERS = "zkServers";
+    protected static String UI_CLUSTER_ZK_PORT = "zkPort";
+    
+    public static List<Map> getUiClusters(Map conf) {
+    	return (List<Map>) conf.get(UI_CLUSTERS);
+    }
+    
+    public static void setUiClusters(Map conf, List<Map> uiClusters) {
+    	conf.put(UI_CLUSTERS, uiClusters);
+    }
+    
+    public static Map getUiClusterInfo(List<Map> uiClusters, String name) {
+    	Map ret = null;
+    	for (Map cluster : uiClusters) {
+    		String clusterName = getUiClusterName(cluster);
+    		if (clusterName.equals(name)) {
+    			ret = cluster;
+    			break;
+    		}
+    	}
+    	
+    	return ret;
+    }
+     
+    public static String getUiClusterName(Map uiCluster) {
+    	return (String) uiCluster.get(UI_CLUSTER_NAME);
+    }
+    
+    public static String getUiClusterZkRoot(Map uiCluster) {
+    	return (String) uiCluster.get(UI_CLUSTER_ZK_ROOT);
+    }
+    
+    public static List<String> getUiClusterZkServers(Map uiCluster) {
+    	return (List<String>) uiCluster.get(UI_CLUSTER_ZK_SERVERS);
+    }
+    
+    public static Integer getUiClusterZkPort(Map uiCluster) {
+    	return JStormUtils.parseInt(uiCluster.get(UI_CLUSTER_ZK_PORT));
     }
 }

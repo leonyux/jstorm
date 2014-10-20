@@ -32,6 +32,7 @@ import com.alibaba.jstorm.cluster.Common;
 import com.alibaba.jstorm.cluster.StormClusterState;
 import com.alibaba.jstorm.cluster.StormConfig;
 import com.alibaba.jstorm.daemon.nimbus.StatusType;
+import com.alibaba.jstorm.daemon.worker.metrics.MetricReporter;
 import com.alibaba.jstorm.schedule.default_assign.ResourceWorkerSlot;
 import com.alibaba.jstorm.task.Assignment;
 import com.alibaba.jstorm.task.TaskShutdownDameon;
@@ -39,7 +40,6 @@ import com.alibaba.jstorm.utils.JStormServerUtils;
 import com.alibaba.jstorm.utils.JStormUtils;
 import com.alibaba.jstorm.zk.ZkTool;
 import com.lmax.disruptor.MultiThreadedClaimStrategy;
-import com.lmax.disruptor.SingleThreadedClaimStrategy;
 import com.lmax.disruptor.WaitStrategy;
 
 public class WorkerData {
@@ -113,6 +113,7 @@ public class WorkerData {
 	private DisruptorQueue sendingQueue;
 
 	private List<TaskShutdownDameon> shutdownTasks;
+	private MetricReporter metricReporter;
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public WorkerData(Map conf, IContext context, String topology_id,
@@ -190,8 +191,10 @@ public class WorkerData {
 		this.transferQueue = new DisruptorQueue(new MultiThreadedClaimStrategy(
 				buffer_size), waitStrategy);
 		this.transferQueue.consumerStarted();
-		this.sendingQueue = new DisruptorQueue(new SingleThreadedClaimStrategy(
+		this.sendingQueue = new DisruptorQueue(new MultiThreadedClaimStrategy(
 				buffer_size), waitStrategy);
+		this.sendingQueue.consumerStarted();
+		
 
 		this.nodeportSocket = new ConcurrentHashMap<WorkerSlot, IConnection>();
 		this.taskNodeport = new ConcurrentHashMap<Integer, WorkerSlot>();
@@ -223,6 +226,8 @@ public class WorkerData {
 		generateMaps();
 
 		contextMaker = new ContextMaker(this);
+		
+		metricReporter = new MetricReporter(this);
 
 		LOG.info("Successfully create WorkerData");
 
@@ -399,5 +404,13 @@ public class WorkerData {
 
 	public void setLocalNodeTasks(Set<Integer> localNodeTasks) {
 		this.localNodeTasks = localNodeTasks;
+	}
+
+	public void setMetricsReporter(MetricReporter reporter) {
+		this.metricReporter = reporter;
+	}
+
+	public MetricReporter getMetricsReporter() {
+		return this.metricReporter;
 	}
 }

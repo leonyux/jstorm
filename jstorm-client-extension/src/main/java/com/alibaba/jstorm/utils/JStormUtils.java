@@ -10,24 +10,18 @@ import java.io.StringWriter;
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import javax.management.AttributeNotFoundException;
-import javax.management.InstanceNotFoundException;
-import javax.management.MBeanException;
-import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
-import javax.management.ReflectionException;
 
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.DefaultExecutor;
@@ -35,10 +29,10 @@ import org.apache.commons.exec.ExecuteException;
 import org.apache.log4j.Appender;
 import org.apache.log4j.FileAppender;
 import org.apache.log4j.Logger;
-import org.json.simple.JSONValue;
 
 import backtype.storm.utils.Utils;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.jstorm.callback.AsyncLoopDefaultKill;
 import com.alibaba.jstorm.callback.RunnableCallback;
 
@@ -258,6 +252,18 @@ public class JStormUtils {
 
 		ensure_process_killed(pid);
 	}
+	
+	public static void kill_signal(Integer pid, String signal) {
+		String cmd = "kill " + signal  + " " + pid;
+		try {
+			exec_command(cmd);
+			LOG.info(cmd);
+		} catch (ExecuteException e) {
+			LOG.info("Error when run " + cmd + ". Process has been killed. ");
+		} catch (Exception e) {
+			LOG.info("Error when run " + cmd + ". Exception ", e);
+		}
+	}
 
 	public static java.lang.Process launch_process(String command,
 			Map<String, String> environment) throws IOException {
@@ -291,14 +297,14 @@ public class JStormUtils {
 	// }
 
 	public static String to_json(Map m) {
-		return JSONValue.toJSONString(m);
+		return JSON.toJSONString(m);
 	}
 
 	public static Object from_json(String json) {
 		if (json == null) {
 			return null;
 		} else {
-			return JSONValue.parse(json);
+			return JSON.parse(json);
 		}
 	}
 
@@ -653,6 +659,50 @@ public class JStormUtils {
 		}
 
 	}
+	
+	public static double formatDoubleDecPoint2(Double value) {
+		try {
+			java.text.DecimalFormat form = new java.text.DecimalFormat(
+					"##.00");
+			String s = form.format(value);
+			return Double.valueOf(s);
+		} catch (Exception e) {
+			return 0.0;
+		}
+	}
+	
+	public static double formatDoubleDecPoint4(Double value) {
+		try {
+			java.text.DecimalFormat form = new java.text.DecimalFormat(
+					"###.0000");
+			String s = form.format(value);
+			return Double.valueOf(s);
+		} catch (Exception e) {
+			return 0.0;
+		}
+	}
+	
+	public static Double convertToDouble(Object value) {
+		Double ret;
+		
+		if (value == null) {
+			ret = null;
+		} else {
+			if (value instanceof Integer) {
+				ret = ((Integer) value).doubleValue();
+			} else if (value instanceof Long) {
+				ret = ((Long) value).doubleValue();
+			} else if (value instanceof Float) {
+				ret = ((Float) value).doubleValue();
+			} else if (value instanceof Double) {
+				ret = (Double) value;
+			} else {
+				ret = null;
+			}
+		}
+		
+		return ret;
+	}
 
 	public static String formatValue(Object value) {
 		if (value == null) {
@@ -727,6 +777,10 @@ public class JStormUtils {
 		Long ret = (Long) object;
 
 		return ret;
+	}
+	
+	public static String genLogName(String topology, Integer port) {
+		return topology + "-worker-" + port	 + ".log";
 	}
 
 	public static String getLogFileName() {

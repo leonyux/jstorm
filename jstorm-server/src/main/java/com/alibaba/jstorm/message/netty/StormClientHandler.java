@@ -24,17 +24,19 @@ public class StormClientHandler extends SimpleChannelUpstreamHandler {
 		being_closed = client.getBeing_closed();
 	}
 
-	@Override
-	public void channelConnected(ChannelHandlerContext ctx,
-			ChannelStateEvent event) {
-		// register the newly established channel
-		Channel channel = event.getChannel();
-		client.setChannel(channel);
-		LOG.info("connection established to :{}, local port:{}",
-				client.getRemoteAddr(), channel.getLocalAddress());
-
-		client.handleResponse();
-	}
+	/**
+	 * Sometime when connect one bad channel which isn't writable, it will call this function
+	 */
+//	@Override
+//	public void channelConnected(ChannelHandlerContext ctx,
+//			ChannelStateEvent event) {
+//		// register the newly established channel
+//		Channel channel = event.getChannel();
+//		LOG.info("connection established to :{}, local port:{}",
+//				client.getRemoteAddr(), channel.getLocalAddress());
+//
+//		client.handleResponse();
+//	}
 
 	@Override
 	public void messageReceived(ChannelHandlerContext ctx, MessageEvent event) {
@@ -66,21 +68,19 @@ public class StormClientHandler extends SimpleChannelUpstreamHandler {
 	@Override
 	public void channelDisconnected(ChannelHandlerContext ctx,
 			ChannelStateEvent e) throws Exception {
-		LOG.info("Receive channelDisconnected to {}", client.getRemoteAddr());
+		LOG.info("Receive channelDisconnected to {}, channel = {}", 
+				client.getRemoteAddr(), e.getChannel());
 		// ctx.sendUpstream(e);
 		super.channelDisconnected(ctx, e);
 
-		if (!being_closed.get()) {
-
-			client.setChannel(null);
-			client.reconnect();
-		}
+		client.disconnectChannel(e.getChannel());
 	}
 
 	 @Override
 	 public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e)
 	 throws Exception {
-		 LOG.info("Connection to {} has been closed", client.getRemoteAddr());
+		 LOG.info("Connection to {} has been closed, channel = {}", 
+				 client.getRemoteAddr(), e.getChannel());
 		 super.channelClosed(ctx, e);
 	 }
 

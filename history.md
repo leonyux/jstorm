@@ -1,4 +1,53 @@
-[JStorm 0.9.0 ΩÈ…‹](http://wenku.baidu.com/view/59e81017dd36a32d7375818b.html)
+[JStorm English introduction](http://42.121.19.155/jstorm/JStorm-introduce-en.pptx)
+[JStorm Chinese introduction](http://42.121.19.155/jstorm/JStorm-introduce.pptx)
+
+#Release 0.9.6.1
+1.Add management of multiclusters in web UI.
+2. Merge trident part from storm-0.9.3
+3. Use fastjson replace gson
+4. Reorganization the code generating metrics json
+5. Get jstorm version from $JSTORM_HOME/RELEASE instead of hardcode
+6. Change task deserialize thread's SingleThreadDisruptorQueue to MultiThreadDisruptorQueue
+7. Fix web ui display wrong number of workers in Supervisor page
+8. Fix taskheart beat thread competition in accessing task map
+9. Fix null pointer exception when killing worker and read worker's hearbeat object
+10. Netty client connect to server only in NettyClient module.
+11. Add break loop operation when netty client connection is closed
+12. Fix the bug that topology warning flag present in cluster page is not consistent with error information present in topology page
+13. Add recovery function when the data of task error information is corrupted
+14. Fix the bug that the metric data can not be uploaded onto Alimonitor when ugrading from pre-0.9.6 to 0.9.6 and executing pkill java without restart the topologying
+15. Fix the bug that zeroMq failed to receive data
+16. Add interface to easily setting worker's memory
+17. Set default value of topology.alimonitor.metrics.post to false
+18. Only start NETTY_SERVER_DECODE_TIME for netty server
+19. Keep compatible with Storm for local mode
+20. Print rootId when tuple failed
+21. In order to keep compatible with Storm, add submitTopologyWithProgressBar interface
+22. Upgrade netty version from 3.2.7 to 3.9.0
+23. Support assign topology to user-defined supervosors
+
+
+#Release 0.9.6
+1. Update UI 
+  - Display the metrics information of task and worker
+  - Add warning flag when errors occur for a topology
+  - Add link from supervisor page to task page
+2. Send metrics data to Alimonitor
+3. Add metrics interface for user
+4. Add task.cleanup.timeout.sec setting to let task gently cleanup
+5. Set the worker's log name as topologyName-worker-port.log
+6. Add setting "worker.redirect.output.file", so worker can redirect System.out/System.err to one setting file
+7. Add storm list command
+8. Add closing channel check in netty client to avoid double close
+9. Add connecting check in netty client to avoid connecting one server twice at one time 
+
+#Release 0.9.5.1
+1. Add netty sync mode
+2. Add block operation in netty async mode
+3. Replace exception with Throwable in executor layer
+4. Upgrade curator-framework version from 1.15 to 1.3.2
+5. Add more netty junit test
+6. Add log when queue is full
 
 #Release 0.9.5
 ##Big feature:
@@ -6,7 +55,7 @@
 
 ## Bug fix
 1. Fix disruptor use too much cpu
-2. Add target NettyServer log when fail to send data by netty
+2. Add target NettyServer log when f1ail to send data by netty
 
 #Release 0.9.4.1
 ##Bug fix:

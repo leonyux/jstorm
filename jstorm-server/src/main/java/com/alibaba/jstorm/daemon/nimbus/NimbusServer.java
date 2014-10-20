@@ -5,6 +5,7 @@ import java.nio.channels.Channel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -28,6 +29,9 @@ import com.alibaba.jstorm.client.ConfigExtension;
 import com.alibaba.jstorm.cluster.StormConfig;
 import com.alibaba.jstorm.daemon.supervisor.Httpserver;
 import com.alibaba.jstorm.daemon.worker.hearbeat.SyncContainerHb;
+import com.alibaba.jstorm.daemon.worker.metrics.UploadMetricFromZK;
+import com.alibaba.jstorm.daemon.worker.metrics.MetricSendClient;
+import com.alibaba.jstorm.daemon.worker.metrics.AlimonitorClient;
 import com.alibaba.jstorm.schedule.CleanRunnable;
 import com.alibaba.jstorm.schedule.FollowerRunnable;
 import com.alibaba.jstorm.schedule.MonitorRunnable;
@@ -66,6 +70,8 @@ public class NimbusServer {
 	private FollowerRunnable follower;
 
 	private Httpserver hs;
+	
+	private UploadMetricFromZK uploadMetric;
 
 	private List<SmartThread> smartThreads = new ArrayList<SmartThread>();
 
@@ -140,6 +146,9 @@ public class NimbusServer {
 			// if not leader wait here
 			while (!data.isLeader())
 				Utils.sleep(5000);
+			
+			
+			initUploadMetricThread(data);
 
 			// if leader
 			// make necessary init
@@ -343,6 +352,24 @@ public class NimbusServer {
 
 		});
 	}
+	
+	private void initUploadMetricThread(NimbusData data) {
+		ScheduledExecutorService scheduleService = data.getScheduExec();
+		
+		MetricSendClient client;
+		if (ConfigExtension.isAlimonitorMetricsPost(data.getConf())) {
+		    client = new AlimonitorClient(AlimonitorClient.DEFAUT_ADDR, 
+				    AlimonitorClient.DEFAULT_PORT, true);
+		} else {
+			client = new MetricSendClient();
+		}
+		
+		uploadMetric = new UploadMetricFromZK(data, client);
+		
+		scheduleService.scheduleWithFixedDelay(uploadMetric, 120, 60, TimeUnit.SECONDS);
+		
+		LOG.info("Successfully init metrics uploading thread");
+	}
 
 	public void cleanup() {
 		if (isShutdown.compareAndSet(false, true) == false) {
@@ -375,6 +402,11 @@ public class NimbusServer {
 		if (follower != null) {
 			follower.clean();
 			LOG.info("Successfully shutdown follower thread");
+		}
+		
+		if (uploadMetric != null) {
+			uploadMetric.clean();
+			LOG.info("Successfully shutdown UploadMetric thread");
 		}
 
 		if (data != null) {

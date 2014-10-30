@@ -135,7 +135,7 @@ public class NimbusServer {
 			// get port from config and start httpserver
 			// TODO: what dose HttpServer do?
 			int port = ConfigExtension.getNimbusDeamonHttpserverPort(conf);
-			hs = new Httpserver(port);
+			hs = new Httpserver(port, conf);
 			hs.start();
 
 			// determine whether nimbus run under a yarn container

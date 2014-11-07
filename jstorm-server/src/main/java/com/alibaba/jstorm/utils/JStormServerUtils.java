@@ -76,13 +76,13 @@ public class JStormServerUtils {
 
 		String[] existPids = file.list();
 
-		// touch pid before
+		// 首先创建新启动的进程的pid文件
 		String pid = JStormUtils.process_pid();
 		String pidPath = dir + File.separator + pid;
 		PathUtils.touch(pidPath);
 		LOG.info("Successfully touch pid  " + pidPath);
 
-		// kill existing nimbus process
+		// 杀死之前的进程，删除相应pid文件
 		for (String existPid : existPids) {
 			try {
 				JStormUtils.kill(Integer.valueOf(existPid));

@@ -48,8 +48,10 @@ public class Zookeeper {
 	public CuratorFramework mkClient(Map conf, List<String> servers,
 			Object port, String root, final WatcherCallBack watcher) {
 
+		// 根据配置文件构造CuratorFramework
 		CuratorFramework fk = Utils.newCurator(conf, servers, port, root);
 
+		// 注册Watcher回调函数处理接收到的event
 		fk.getCuratorListenable().addListener(new CuratorListener() {
 			@Override
 			public void eventReceived(CuratorFramework _fk, CuratorEvent e)
@@ -64,6 +66,7 @@ public class Zookeeper {
 			}
 		});
 
+		// 注册Zookeeper Error处理函数
 		fk.getUnhandledErrorListenable().addListener(
 				new UnhandledErrorListener() {
 					@Override
@@ -76,6 +79,7 @@ public class Zookeeper {
 
 					}
 				});
+		// 启动CuratorFramework
 		fk.start();
 		return fk;
 	}

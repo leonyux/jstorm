@@ -121,11 +121,11 @@ public class NimbusServer {
 			// add shutdown hook cleanup
 			initShutdownHook();
 
-			// DefaultInimbus do nothing
+			// DefaultInimbus prepare do nothing
 			inimbus.prepare(conf, StormConfig.masterInimbus(conf));
 
 			// construct NimbusData object with TimeCachedMap uploader and downloader
-			// data stucture that contains important
+			// data stucture that contains important infomation
 			data = createNimbusData(conf, inimbus);
 
 			// start daemon thread execute FollowerRunnable object
@@ -240,6 +240,8 @@ public class NimbusServer {
 
 		// Callback callback=new TimerCallBack();
 		// StormTimer timer=Timer.mkTimerTimer(callback);
+		// 将storm配置和刚创建的两个TimeCachedMap传给构造函数构造NimbusData对象
+		// 两个TimeCachedMap的ExpiredCallback被定义成关闭通道或者流
 		NimbusData data = new NimbusData(conf, downloaders, uploaders, inimbus);
 
 		return data;
@@ -371,6 +373,7 @@ public class NimbusServer {
 		LOG.info("Successfully init metrics uploading thread");
 	}
 
+	// cleanuphook方式被调用，完成进程结束时的清理工作。
 	public void cleanup() {
 		if (isShutdown.compareAndSet(false, true) == false) {
 			LOG.info("Notify to quit nimbus");

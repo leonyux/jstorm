@@ -53,12 +53,16 @@ public class StormZkClusterState implements StormClusterState {
 
 	public StormZkClusterState(Object cluster_state_spec) throws Exception {
 
+		// 根据传入的cluster_stat_spec参数决定solo
+		// nimbus,supervisor启动的时候都是给的map型参数
+		// worker, task启动的时候给的是ClusterState参数
 		if (cluster_state_spec instanceof ClusterState) {
 			solo = false;
 			cluster_state = (ClusterState) cluster_state_spec;
 		} else {
 
 			solo = true;
+			// DistributedClusterState实际上是一个CuratorFramework封装，监听zk通知
 			cluster_state = new DistributedClusterState(
 					(Map) cluster_state_spec);
 		}

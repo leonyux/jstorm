@@ -74,6 +74,7 @@ public class NimbusData {
 		this.submittedCount = new AtomicInteger(0);
 
 		// return StormZkClusterState object constructed with conf map
+		// stormClusterState负责过
 		this.stormClusterState = Cluster.mk_storm_cluster_state(conf);
 
 		this.taskHeartbeatsCache = new ConcurrentHashMap<String, Map<Integer, TkHbCacheTime>>();

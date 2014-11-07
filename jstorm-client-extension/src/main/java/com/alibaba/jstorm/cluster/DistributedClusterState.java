@@ -47,13 +47,17 @@ public class DistributedClusterState implements ClusterState {
 		conf = _conf;
 
 		// just mkdir STORM_ZOOKEEPER_ROOT dir
+		// 利用CuratorFramework提供的接口创建storm zookeeper根节点
+		// 使用DefaultWatcherCallBack作为默认的事件回调函数
 		CuratorFramework _zk = mkZk();
 		String path = String.valueOf(conf.get(Config.STORM_ZOOKEEPER_ROOT));
 		zkobj.mkdirs(_zk, path);
+		// 关闭了创建根节点使用的CuratorFramework
 		_zk.close();
 
 		active = new AtomicBoolean(true);
 
+		// 构造WatcherCallBack，根据通知事件
 		watcher = new WatcherCallBack() {
 			@Override
 			public void execute(KeeperState state, EventType type, String path) {
@@ -66,6 +70,7 @@ public class DistributedClusterState implements ClusterState {
 								+ path);
 					}
 
+					// 调用注册的每个回调函数
 					if (!type.equals(EventType.None)) {
 						for (Entry<UUID, ClusterStateCallback> e : callbacks
 								.entrySet()) {
@@ -77,6 +82,7 @@ public class DistributedClusterState implements ClusterState {
 			}
 		};
 		zk = null;
+		// 构造CuratorFramework，并注册刚才定义的WatcherCallback
 		zk = mkZk(watcher);
 
 	}

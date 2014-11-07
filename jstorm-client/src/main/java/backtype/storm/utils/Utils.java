@@ -218,6 +218,7 @@ public class Utils {
 		String confFile = System.getProperty("storm.conf.file");
 		Map storm;
 		if (confFile == null || confFile.equals("")) {
+			// 由于jstorm启动脚本把conf目录添加到了cp，因此配置文件在此找到
 			storm = findAndReadConfigFile("storm.yaml", false);
 		} else {
 			storm = findAndReadConfigFile(confFile, true);
@@ -225,6 +226,7 @@ public class Utils {
 		ret.putAll(storm);
 		ret.putAll(readCommandLineOpts());
 
+		// 将配置中的%JSTORM_DIR%替换为真实路径
 		replaceLocalDir(ret);
 		return ret;
 	}

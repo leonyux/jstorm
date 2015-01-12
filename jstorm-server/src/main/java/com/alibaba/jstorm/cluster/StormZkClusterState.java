@@ -136,6 +136,7 @@ public class StormZkClusterState implements StormClusterState {
 
 	}
 
+	// 从zookeeper中读取任务分发信息
 	@Override
 	public Assignment assignment_info(String topologyId,
 			RunnableCallback callback) throws Exception {

@@ -704,6 +704,7 @@ class SyncProcessEvent extends ShutdownWork {
 		return keepPorts;
 	}
 
+	// 启动worker进程
 	private void startNewWorkers(Set<Integer> keepPorts,
 			Map<Integer, LocalAssignment> localAssignments) throws Exception {
 		/**
